@@ -785,7 +785,20 @@
 	}
 	
 	
-		function perform_test()
+	class Account
+	{
+		public function __construct()
+		{
+		}
+		
+		public function perform_trading()
+		{
+			
+		}
+	}
+	
+	
+	function perform_test()
 	{
 		
 		$path = "C:\Users\Russell Brown\Documents\PHP Scripts\symbols.dat";		
@@ -803,8 +816,9 @@
 			if ($line == null) break;
 			
 			$line = str_replace("\n", "", $line);
+			$line_arr = split_string($line, '|');
 			
-			array_push($symbol_list, $line);
+			array_push($symbol_list, $line_arr[0]);
 			
 			$open_array = array();
 			$high_array = array();
@@ -869,10 +883,13 @@
 		$inventory = buy($inventory, "cad", "cad", 100000, 1, "debit");
 		$inventory_summary = CalculateInventorySummary($inventory, $inventory_summary);
 		
-		//-----------------------------
 		
-		
-		
+		$account_summary = array();
+		$account_summary_length = 50;
+		for ($i = 0; $i < $account_summary_length; $i++)
+		{
+			array_push($account_summary, 0);
+		}
 		
 		
 		while (true)
@@ -921,17 +938,10 @@
 								}
 							}
 							
-							//print "current inventory:\n";
+							//-------------------------------------------------------------------------------------------------------------------------
 							
 							// update positions
-							
-							if ($date_count == 43)
-							{
-								//print sizeof($price_list)."\n";
-								//print "******** trying to update **********\n";
-							}
-							
-								
+															
 							for ($i2 = 0; $i2 < sizeof($price_list); $i2++)
 							{
 								$ar = $price_list[$i2];
@@ -962,56 +972,52 @@
 							$scount = 0;
 							$scount2 = 0;
 							
-							//if ($date_count == 44)
+							
+							for ($i2 = 0; $i2 < sizeof($inventory_summary); $i2++)
 							{
-								//print "*********trying to close:*********\n";
-							
-								for ($i2 = 0; $i2 < sizeof($inventory_summary); $i2++)
-								{
-									$ar2 = $inventory_summary[$i2];
-									
-									
-									$profit = $ar2[4];		
-									
-									
-									if ($profit >= 10)
-									{						
+								$ar2 = $inventory_summary[$i2];
 								
-										$value = $ar2[1] * $ar2[3];
-										$inventory = sell($inventory, $ar2[0], "cad", $ar2[1], $ar2[3], "debit");				
-
-										
-										$activity = $activity."sold - profit:  ".$ar2[0]." qty:".$ar2[1]." prc:".$ar2[3]." vlu:".$value." pft:".$profit."\n";
-										
-										$scount++;		
-										
-									}
-									
-									
-									if ($profit < -100)
-									{						
 								
-										$value = $ar2[1] * $ar2[3];
-										
-										$qty = $ar2[1];
-										
-										if ($qty / 2 > 5) $qty /= 2;
-										
-										$inventory = sell($inventory, $ar2[0], "cad", $qty, $ar2[3], "debit");			
-
-										
-										$activity = $activity."sold - managed:  ".$ar2[0]." qty:".$qty." prc:".$ar2[3]." vlu:".$value." pft:".$profit."\n";
-										
-																			
-										$scount2++;
-									}
+								$profit = $ar2[4];		
+								
+								
+								if ($profit >= 10)
+								{						
 							
+									$value = $ar2[1] * $ar2[3];
+									$inventory = sell($inventory, $ar2[0], "cad", $ar2[1], $ar2[3], "debit");				
+
+									
+									$activity = $activity."sold - profit:  ".$ar2[0]." qty:".$ar2[1]." prc:".$ar2[3]." vlu:".$value." pft:".$profit."\n";
+									
+									$scount++;		
+									
 								}
 								
-								$inventory_summary = CalculateInventorySummary($inventory, $inventory_summary);	
+								
+								if ($profit < -100)
+								{						
+							
+									$value = $ar2[1] * $ar2[3];
 									
-							}
+									$qty = $ar2[1];
+									
+									if ($qty / 4 > 4) $qty /= 4;
+									
+									$inventory = sell($inventory, $ar2[0], "cad", $qty, $ar2[3], "debit");			
+
+									
+									$activity = $activity."sold - managed:  ".$ar2[0]." qty:".$qty." prc:".$ar2[3]." vlu:".$value." pft:".$profit."\n";
+									
+																		
+									$scount2++;
+								}
 						
+							}
+							
+							$inventory_summary = CalculateInventorySummary($inventory, $inventory_summary);	
+									
+							
 						
 							if (sizeof($diff_array) >= 5)
 							{
@@ -1019,7 +1025,10 @@
 						
 								// open positions - calculate top 5
 								
-								if (CalculateBalance($inventory_summary) > 50000)
+								
+								$cash_available = CalculateTotalQuantity($inventory, "cad");
+								
+							//	if ($cash_available > 20000)
 								{
 									
 									$ar = array();
@@ -1078,20 +1087,40 @@
 														//$date_count == 41 ||
 														//$date_count == 42)
 														{
+															
 													
-															$amount_spend = 2000;
-															$qty = round($amount_spend / $ar[1], 0);
-															$cost = $qty * $ar[1];
-															$inventory = buy($inventory, $symbol, "cad", $qty, $ar[1], "debit");	
 															
-														//	print "bought:  ".$symbol." qty:".$qty." prc:".$ar[1]." cst:".$cost." ";
-															//$inventory_summary = CalculateInventorySummary($inventory, $inventory_summary);
-															
-															
-															$activity = $activity."bought:  ".$symbol." qty:".$qty." prc:".$ar[1]." cst:".$cost."\n";	
-															
-															$bcount++;
 														
+															//$amount_spend = $cash_available / 50;
+															
+															//$amount_spend = 5000;
+															
+															
+															$cash_available = CalculateTotalQuantity($inventory, "cad");
+															
+															
+															$amount_spend = $cash_available / 10;
+															
+															
+															
+															
+															if ($cash_available - $amount_spend > 20000)
+															{
+															
+															
+																$qty = round($amount_spend / $ar[1], 0);
+																$cost = $qty * $ar[1];
+																$inventory = buy($inventory, $symbol, "cad", $qty, $ar[1], "debit");	
+																
+															//	print "bought:  ".$symbol." qty:".$qty." prc:".$ar[1]." cst:".$cost." ";
+																//$inventory_summary = CalculateInventorySummary($inventory, $inventory_summary);
+																
+																
+																$activity = $activity."bought:  ".$symbol." qty:".$qty." prc:".$ar[1]." cst:".$cost."\n";	
+																
+																$bcount++;
+															
+															}
 														
 														}
 													
@@ -1146,7 +1175,8 @@
 							
 							
 									
-							
+							$cash_available = CalculateTotalQuantity($inventory, "cad");
+							$cash_available = round($cash_available, 2);
 							$balance = CalculateBalance($inventory_summary);
 							$equity = $balance + CalculateEquity($inventory_summary);
 							$position_count = sizeof($inventory_summary) - 1;
@@ -1154,7 +1184,22 @@
 							
 							//print "------------------------------------------------------------------------\n";
 		
-							print $date_count."   ".$date.": ".date("h:i")."  ".$balance."  ".$equity."  ".$bcount."  ".$scount."  ".$scount2."  ".$position_count."\n";
+							for ($i2 = 1; $i2 < $account_summary_length; $i2++)
+							{
+								$account_summary[$i2 - 1] = $account_summary[$i2];
+							}
+							
+							$account_summary[$account_summary_length - 1] = $equity;
+							
+							$average = 0;
+							for ($i2 = 0; $i2 < $account_summary_length; $i2++)
+							{
+								$average += $account_summary[$i2];
+							}
+							
+							$average /= $account_summary_length;
+		
+							print $date_count."   ".$date.": ".date("h:i")."  ".$balance."  ".$equity."  ".$cash_available."  ".$bcount."  ".$scount."  ".$scount2."  ".$position_count."\n";
 							
 							
 						//	PrintInventorySummary($inventory_summary);
@@ -1164,7 +1209,7 @@
 							
 							
 							$date_count++;
-							if ($date_count > 400)
+							if ($date_count > 150)
 							{
 								exit();
 							}
@@ -1174,6 +1219,8 @@
 					
 					if ($read_line == "true")
 					{
+						
+						
 						$arr2 = split_string($line, ',');		
 						
 						$has_data = "true";
@@ -1187,7 +1234,7 @@
 							}
 						}
 						
-						if ($arr2[6] < 10 || $arr2[6] > 1000 || $arr2[8] < 1000)
+						if ($arr2[6] < 20 || $arr2[6] > 2000 || $arr2[8] < 1000)
 						{
 							$has_data = "false";
 						}
@@ -1248,6 +1295,7 @@
 								$close_array[$chart_length - 1] = doubleval($arr2[6]);
 								
 								
+								
 								//---------------------------------------------------------------
 								// update price list with symbol & price
 								array_push($price_list, array($symbol, doubleval($arr2[6])));
@@ -1282,7 +1330,7 @@
 								}
 								else
 								{			
-									$period = 5;
+									$period = 10;
 							
 									$close_array = $array[3];
 									
@@ -1360,174 +1408,6 @@
 	
 	
 	
-	
-//	perform_test();
-	
-	/*
-	$i = 0;
-	$i1 = 1;
-	$i2 = 2;
-	
-	$arr = array();
-	$arr["7.6"] = $i;
-	$arr["5.3"] = $i1;
-	$arr["2.9"] = $i2;
-	
-	ksort($arr);
-	
-	foreach($arr as $x=>$x_value)
-	   {
-		   print $x."   ".$x_value."\n";
-	   }
-	*/
-	
-	
-	
-	/*
-	$arr=array("Peter"=>0,"Ben"=>1,"Joe"=>2);
-	ksort($arr);
-
-	foreach($arr as $x=>$x_value)
-	   {
-		   print $x."   ".$x_value."\n";
-	   }*/
-	
-	
-	//perform_test();
-	
-	
-	
-	//normalize_data();
-	
-	
-	
-	//$arr = array("bv", "af", "aaw", "rd", "ef", "a");
-	
-	//$arr = quick_sort($arr);
-	
-	//for ($i = 0; $i < sizeof($arr); $i++)
-	//{
-	//	print $arr[$i]."\n";
-	//}
-	
-	//create_symbols_file();
-	// TO DO ******  >>>>>> create chart for each symbol****
-	
-	
-	
-	/*
-	$person = array(
-        "radib" => 21,
-        "amit" => 21,
-        "abhi" => 20,
-        "prem" => 27,
-        "manju" => 25
-        );
-
-		
-    
-    ksort($person);
-	
-	foreach ($person as $key => $val) { 
-		print "[$key] = $val"; 
-		print "\n"; 
-	} 
-	*/
-	
-	
-	
-	
-	
-	
-	
-	
-				
-				/*
-				$ob_items = $ob[0];
-				$ob_keys = $ob[1];
-				
-				for ($i2 = 0; $i2 < sizeof($ob_items); $i2++)
-				{
-					$key = $ob_keys[$i2];
-					$data_line2 = $map_list[$key];
-					fwrite($output_file, $data_line2);
-				}
-	
-				
-				/*
-				for ($i2 = sizeof($map_list) - 1; $i2 >= 0; $i2--)
-                {
-                    $data_line2 = $map_list[$i2];
-                    fwrite($output_file, $data_line2);
-                }	
-				
-				fwrite($output_file, "beginning of data:".$saved_size."\n");
-				*/
-	
-	
-		
-		
-		
-	
-	//normalize_data();
-	
-	
-	
-	
-	/*
-		
-	$ob = insertion_sort($symbol_list, $symbol_keys);
-	$ob_items = $ob[0];
-	$ob_keys = $ob[1];
-	
-	for ($i2 = 0; $i2 < sizeof($ob_items); $i2++)
-	{
-		$key = $ob_keys[$i2];
-		$data_line2 = $map_list[$key];
-		fwrite($output_file, $data_line2);
-	}
-	
-				
-	*/
-
-/*
-	$items = array("ab", "bc", "de", "be", "a", "asdf", "beoe", "ce");
-	
-	$keys = array();
-	for ($i = 0; $i < sizeof($items); $i++)
-	{
-		array_push($keys, $i);
-	}
-	
-	$ob = insertion_sort($items, $keys);
-	$ob_items = $ob[0];
-	$ob_keys = $ob[1];
-	
-	for ($i = 0; $i < sizeof($items); $i++)
-	{
-		
-		print $ob_items[$i]."    ".$ob_keys[$i]."\n";
-	}*/
-	
-	
-	
-	/*
-	$data_path = "C:\Users\Russell Brown\Documents\PHP Scripts\price_data - Copy.dat";
-	$data_file = fopen($data_path, "r");
-
-	for ($i = 0; $i < 10000; $i++)
-	{
-		$line = fgets($data_file);
-		print $line;
-	}
-	
-
-	fclose($data_file);
-	
-	*/
-	
-	//map_data();
-		
 	
 
 ?>
